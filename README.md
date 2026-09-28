@@ -1,209 +1,251 @@
-# RuScholar TMA (Academic Translate & Learn)
+# RuScholar TMA — Academic Translate & Learn
 
-> **Enterprise-Grade Telegram Mini App & Bot for International Students in Russian Universities**  
-> Developed for the Master's in Software Engineering Portfolio (Open Doors Russian Scholarship Project).
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x%20%7C%206.x-blue?logo=typescript)](https://www.typescriptlang.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-22.x-green?logo=node.js)](https://nodejs.org/)
+[![Express.js](https://img.shields.io/badge/Express.js-5.x-lightgrey?logo=express)](https://expressjs.com/)
+[![React](https://img.shields.io/badge/React-19.x-61dafb?logo=react)](https://react.dev/)
+[![MongoDB](https://img.shields.io/badge/MongoDB-7.0-47A248?logo=mongodb)](https://www.mongodb.com/)
+[![Telegram](https://img.shields.io/badge/Telegram-Mini%20App%20SDK-26A5E4?logo=telegram)](https://core.telegram.org/bots/webapps)
+[![Docker](https://img.shields.io/badge/Docker-Multi--Stage-2496ED?logo=docker)](https://www.docker.com/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
----
-
-## 📌 Executive Summary
-
-**RuScholar TMA** is an educational and linguistic assistance platform engineered to eliminate language barriers for international university students studying in the Russian Federation. By bridging Telegram's real-time messaging ecosystem with an integrated Telegram Mini App (TMA), the system facilitates seamless academic comprehension:
-
-1. **Academic Ingestion via Telegram Bot**: Students forward Russian lecture announcements, research papers, assignment prompts, and academic notices to the bot.
-2. **Linguistic Decomposition & Term Extraction**: Academic messages are translated while extracting critical discipline-specific terminology and context sentences using Yandex / LLM services.
-3. **Automated SRS Generation**: Extracted academic terms are transformed into personalized flashcards stored in MongoDB with SuperMemo SM-2 spaced repetition metrics.
-4. **Interactive Mini App Review**: Students review due flashcards inside the React-based Telegram Mini App directly within Telegram, optimizing long-term retention.
+> **Enterprise-Grade Telegram Bot & Integrated Mini App (TMA) for International University Students in the Russian Federation.**  
+> Designed and architected for the Master's in Software Engineering Portfolio (**Open Doors Russian Scholarship Project**).
 
 ---
 
-## 🏛 System Architecture & Folder Hierarchy
+## 🎯 The Real-World Academic Problem Solved
 
-The repository adopts a clean, decoupled monorepo architecture adhering to Domain-Driven and Layered Clean Architecture patterns:
+Every year, tens of thousands of international students arrive in the Russian Federation to pursue advanced degrees in Software Engineering, Computer Science, Mathematics, Physics, and Medicine. Despite completing preparatory language faculties (подфак), international students encounter severe linguistic and cognitive friction upon entering actual university degree programs:
+
+```
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                        THE INTERNATIONAL STUDENT CHALLENGE IN RUSSIA                   │
+├────────────────────────────────┬───────────────────────────────┬───────────────────────┤
+│ 1. Heavy Academic Telegram Use │ 2. Technical Context Collapse  │ 3. The Retention Gap  │
+│ Russian universities           │ Standard translation tools    │ Copy-pasting into     │
+│ (деканат, кафедры, староста)   │ fail on university-specific   │ translators provides  │
+│ broadcast homework, thesis     │ terminology (e.g. "зачёт",    │ momentary clarity,    │
+│ deadlines, and lab notes       │ "курсовая работа",            │ but students quickly  │
+│ exclusively in Telegram.       │ "дифференциальное уравнение").│ forget key terms.     │
+└────────────────────────────────┴───────────────────────────────┴───────────────────────┘
+```
+
+### How RuScholar Solves This
+
+1. **Zero Context Switching**: Students stay inside Telegram. When an intimidating Russian announcement arrives, they simply **forward the message** to `@RuScholarBot`.
+2. **Academic Terminology Extraction**: The bot translates the text and uses an Academic NLP / YandexGPT service to extract technical terms with bidirectional Russian/English contextual sentences.
+3. **Automated SRS Flashcard Generation**: The extracted terms are instantly saved to MongoDB with default **SuperMemo SM-2 Spaced Repetition System** metrics.
+4. **Telegram Mini App (TMA)**: The student taps one button to launch the embedded React Mini App, reviewing flashcards with scientific intervals ("Again", "Hard", "Good", "Easy") right inside Telegram.
+
+---
+
+## 🏛 System Architecture
+
+The project is structured as a clean monorepo separating the Express/TypeScript API backend from the Vite/React Mini App frontend while sharing domain models and security contracts:
+
+```mermaid
+graph TD
+    User([International Student]) -->|Forwards Russian Academic Notice| TG[Telegram Messenger]
+    TG -->|Webhook POST /api/webhook/telegram| BE[RuScholar Express Backend]
+    
+    subgraph "Backend Services"
+        BE -->|Async Message Ingestion| BotService[Bot Service Pipeline]
+        BotService -->|Academic Extraction Prompt| LLM[YandexGPT / Academic NLP]
+        BotService -->|Save Message & Flashcards| DB[(MongoDB 7.0)]
+        BotService -->|Dispatches Translation & Launch Button| TG
+    end
+
+    User -->|Taps 'Review Flashcards' Button| TMA[Telegram Mini App - React/Vite]
+    
+    subgraph "Telegram Mini App (TMA)"
+        TMA -->|Cryptographic initData Handshake| Security[HMAC-SHA-256 Middleware]
+        Security -->|Validated Session| FlashcardRoutes[Flashcard REST API]
+        FlashcardRoutes -->|Query Due Cards / Review SM-2| DB
+    end
+```
+
+---
+
+## 🔄 End-to-End Sequence Workflows
+
+### 1. Academic Forwarding & Term Extraction Workflow
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Student as Student (Telegram)
+    participant TG as Telegram Bot API
+    participant Webhook as Webhook Controller
+    participant Bot as Bot Service
+    participant LLM as YandexGPT / Academic NLP
+    participant DB as MongoDB
+
+    Student->>TG: Forwards academic message (e.g., lecture notes, thesis notice)
+    TG->>Webhook: POST /api/webhook/telegram (X-Telegram-Bot-Api-Secret-Token)
+    Webhook-->>TG: 200 OK (Immediate Acknowledgment)
+    Webhook-)Bot: Asynchronous message dispatch
+    Bot->>TG: sendChatAction('typing')
+    Bot->>DB: Upsert User (telegramId, languageCode)
+    Bot->>LLM: analyzeAcademicText(russianText, 'en')
+    LLM-->>Bot: { translatedText, terms: [ { originalTerm, translatedTerm, contextSentenceRu, tags } ] }
+    Bot->>DB: Save Message document
+    Bot->>DB: Upsert Flashcards with SM-2 defaults (interval: 0, rep: 0, EF: 2.5, nextReview: now)
+    Bot->>TG: sendMessage (HTML Translation + Numbered Terminology Breakdown + 'Open Mini App' WebApp Button)
+    TG-->>Student: Displays academic translation & flashcard confirmation
+```
+
+### 2. Mini App Review & SM-2 Spaced Repetition Workflow
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Student as Student (Mini App)
+    participant TMA as React Frontend (Vite)
+    participant Guard as HMAC-SHA-256 Auth Middleware
+    participant API as Flashcards API
+    participant SRS as SM-2 Algorithm Service
+    participant DB as MongoDB
+
+    Student->>TMA: Opens Mini App from Telegram chat
+    TMA->>TMA: @twa-dev/sdk WebApp.ready() & expand()
+    TMA->>Guard: GET /api/flashcards/due (Authorization: tma <initData>)
+    Guard->>Guard: Verify HMAC-SHA-256("WebAppData", BOT_TOKEN) & auth_date freshness
+    Guard->>API: Validated req.userDoc & req.telegramUser
+    API->>DB: find({ userId, nextReviewDate: { $lte: now } }).sort({ nextReviewDate: 1 })
+    DB-->>TMA: Due flashcards array
+    TMA-->>Student: Displays 3D interactive flip card (Russian term + context)
+    Student->>TMA: Taps card (3D flip reveals English translation)
+    Student->>TMA: Clicks rating ("Again", "Hard", "Good", or "Easy")
+    TMA->>Guard: POST /api/flashcards/:id/review { rating: 'good' }
+    Guard->>API: reviewFlashcard()
+    API->>SRS: calculateNextReview({ repetition, interval, easeFactor, grade: 4 })
+    SRS-->>API: { nextRepetition, nextInterval, nextEaseFactor, nextReviewDate }
+    API->>DB: Update Flashcard metrics & lastReviewedAt
+    DB-->>TMA: 200 OK { reviewSummary }
+    TMA->>TMA: Haptic feedback & advance to next due card
+```
+
+---
+
+## 🔐 Cryptographic Security & Telegram Verification
+
+The system complies with Telegram's official cryptographic authentication specification:
+
+```mermaid
+flowchart LR
+    A[Raw initData Query String] --> B[Extract hash & auth_date]
+    B --> C[Verify auth_date < 24h]
+    A --> D[Sort key=value pairs alphabetically]
+    D --> E[Build data-check-string with \n]
+    F[BOT_TOKEN] --> G[HMAC-SHA-256 with 'WebAppData']
+    G --> H[Secret Key]
+    E & H --> I[Calculate HMAC-SHA-256 Signature]
+    I & B --> J{crypto.timingSafeEqual}
+    J -->|Valid| K[Authenticate User & Upsert MongoDB]
+    J -->|Invalid / Expired| L[401 Unauthorized Rejection]
+```
+
+---
+
+## 📂 Repository Structure
 
 ```
 RuScholar-TMA/
-├── backend/
+├── backend/                           # Node.js + Express + TypeScript API
 │   ├── src/
-│   │   ├── config/
-│   │   │   ├── env.ts                 # Strongly-typed environment variables & validation
-│   │   │   └── database.ts            # MongoDB connection manager with lifecycle events
-│   │   ├── controllers/
-│   │   │   └── webhook.controller.ts  # Webhook ingestion & secret token verification
-│   │   ├── middlewares/
-│   │   │   ├── validateInitData.ts    # Telegram initData HMAC-SHA-256 security middleware
-│   │   │   ├── errorHandler.ts        # Centralized enterprise error handler
-│   │   │   └── notFound.ts            # 404 route handler
-│   │   ├── models/
-│   │   │   ├── User.model.ts          # Mongoose User model with unique Telegram ID index
-│   │   │   ├── Message.model.ts       # Mongoose Message model with compound query indexes
-│   │   │   └── Flashcard.model.ts     # Mongoose Flashcard model with SM-2 SRS metrics & indexes
-│   │   ├── routes/
-│   │   │   ├── index.ts               # Root API router (/api)
-│   │   │   ├── webhook.routes.ts      # Webhook ingestion routes (/api/webhook)
-│   │   │   └── flashcard.routes.ts    # Mini App authenticated routes (/api/flashcards)
-│   │   ├── types/
-│   │   │   ├── express.d.ts           # Type augmentation for Express Request (req.telegramUser)
-│   │   │   ├── telegram.types.ts      # Telegram Bot & Mini App domain interfaces
-│   │   │   ├── user.types.ts          # User document interfaces
-│   │   │   ├── message.types.ts       # Message document interfaces
-│   │   │   └── flashcard.types.ts     # Flashcard and SRS grade types
-│   │   ├── app.ts                     # Express app factory (CORS, parser, middleware pipeline)
-│   │   └── server.ts                  # Server bootstrap & graceful shutdown lifecycle
-│   ├── tests/
-│   │   └── hmac.test.ts               # Unit & security test suite for HMAC verification
-│   ├── .env.example                   # Environment configuration template
-│   ├── package.json                   # Dependencies & npm scripts
-│   └── tsconfig.json                  # Strict TypeScript configuration
-├── frontend/                          # React + TypeScript Telegram Mini App (Vite)
-├── .gitignore                         # Root Git ignore rules
-└── README.md                          # Project documentation
+│   │   ├── config/                    # Validated environment & MongoDB lifecycle
+│   │   ├── controllers/               # Webhook & Flashcard REST controllers
+│   │   ├── middlewares/               # HMAC-SHA-256 validator & error handlers
+│   │   ├── models/                    # Mongoose schemas (User, Message, Flashcard)
+│   │   ├── routes/                    # Express modular route definitions
+│   │   ├── services/                  # Telegram Bot, LLM NLP, and SM-2 services
+│   │   └── types/                     # Strict TypeScript interfaces
+│   ├── tests/                         # Unit tests (HMAC, SM-2, and LLM)
+│   ├── Dockerfile                     # Multi-stage production container
+│   └── README.md                      # Backend technical documentation
+├── frontend/                          # React 19 + TypeScript + Vite Mini App
+│   ├── src/
+│   │   ├── api/                       # Axios client with initData interceptors
+│   │   ├── components/                # 3D Flip Card, Tabs, Navbar, Dictionary
+│   │   ├── context/                   # TelegramContext wrapping @twa-dev/sdk
+│   │   └── hooks/                     # useTelegram hook
+│   ├── nginx.conf                     # Production Nginx with Gzip & CSP headers
+│   ├── Dockerfile                     # Multi-stage Nginx Alpine container
+│   └── README.md                      # Frontend technical documentation
+├── docker-compose.yml                 # Orchestration for Mongo, Backend, Frontend
+├── LICENSE                            # MIT License
+└── README.md                          # Root system architecture documentation
 ```
 
 ---
 
-## 🔐 Security Architecture: Telegram HMAC-SHA-256 Validation
+## 🚀 Quick Start & Installation
 
-The backend enforces Telegram's official cryptographic authentication specification to protect all Mini App API routes against spoofing, forgery, and replay attacks:
+### Option 1: Docker Compose (Recommended)
 
-1. **Signature Computation**:
-   $$\text{secret\_key} = \text{HMAC-SHA-256}(\text{"WebAppData"}, \text{BOT\_TOKEN})$$
-   $$\text{expected\_hash} = \text{HMAC-SHA-256}(\text{secret\_key}, \text{data\_check\_string})$$
-2. **Replay Attack Defense**: Validates `auth_date` against a 24-hour expiration window.
-3. **Timing-Safe Comparison**: Utilizes `crypto.timingSafeEqual` with strict 64-character hexadecimal parsing to prevent side-channel timing attacks.
-4. **Automated User Synchronization**: Upserts and attaches the authenticated `req.telegramUser` and `req.userDoc` to the Express pipeline.
+To spin up MongoDB, the Backend API, and the Frontend Nginx web server in isolated containers:
 
----
-
-## 🗄 Database Design & Indexing
-
-The MongoDB database layer is optimized for high-throughput reads and low-latency spaced repetition scheduling:
-
-| Model | Key Fields | Applied Indexes | Purpose |
-| :--- | :--- | :--- | :--- |
-| **`User`** | `telegramId`, `username`, `firstName`, `targetLanguage` | `{ telegramId: 1 }` (unique)<br>`{ username: 1 }` (sparse) | $O(1)$ user identification and authentication lookup |
-| **`Message`** | `userId`, `telegramMessageId`, `originalText`, `translatedText` | `{ userId: 1, createdAt: -1 }`<br>`{ userId: 1, telegramMessageId: 1 }` | Chronological history & idempotency |
-| **`Flashcard`** | `userId`, `originalTerm`, `translatedTerm`, `interval`, `repetition`, `easeFactor`, `nextReviewDate` | `{ userId: 1, nextReviewDate: 1 }`<br>`{ userId: 1, originalTerm: 1 }`<br>`{ tags: 1 }` | Ultra-fast retrieval of due cards (`nextReviewDate <= now`), deduplication |
-
----
-
-## 🚀 Getting Started (Backend)
-
-### Prerequisites
-* Node.js $\ge$ 20.x
-* MongoDB instance (local or Atlas)
-
-### Installation & Execution
 ```bash
-# Navigate to backend directory
-cd backend
+# 1. Clone repository
+git clone https://github.com/SaadRimeh/RuScholar-TMA.git
+cd RuScholar-TMA
 
-# Install dependencies
-npm install
+# 2. Copy environment templates
+cp backend/.env.example backend/.env
 
-# Copy environment variables
-cp .env.example .env
-
-# Run cryptographic test suite
-npm test
-
-# Compile TypeScript
-npm run build
-
-# Start in development mode (with hot-reload)
-npm run dev
-```
-
----
-
-## 🗺 Roadmap
-
-- [x] **Task 1: Backend Initialization & Architecture** *(Completed)*
-  - Modular layered directory hierarchy
-  - Mongoose models (`User`, `Message`, `Flashcard` with SM-2 SRS metrics and compound indexes)
-  - Telegram Webhook endpoint with secret token verification
-  - Enterprise HMAC-SHA-256 validation middleware with timing-safe comparison
-- [x] **Task 2: Bot Logic & LLM Integration** *(Completed)*
-  - Telegram Bot service layer (`telegram.service.ts`) with HTML formatting & Mini App WebApp button
-  - Academic translation & LLM terminology extraction service (`llm.service.ts`) with YandexGPT API & resilient fallback
-  - Orchestration pipeline (`bot.service.ts`) automating translation, terms extraction, message persistence, and default SM-2 flashcard creation in MongoDB
-- [x] **Task 3: Backend API for the Mini App** *(Completed)*
-  - SuperMemo SM-2 Spaced Repetition engine (`srs.service.ts`) with ease factor, repetition, and interval calculation
-  - Due flashcard query endpoint (`GET /api/flashcards/due`) utilizing compound index `{ userId: 1, nextReviewDate: 1 }`
-  - Flashcard review submission endpoint (`POST /api/flashcards/:id/review`) with IDOR protection
-  - Comprehensive deck statistics (`GET /api/flashcards/stats`) and paginated search (`GET /api/flashcards`)
-- [x] **Task 4: Frontend Boilerplate & Telegram SDK** *(Completed)*
-  - Vite React + TypeScript boilerplate with strict module typing
-  - Telegram WebApp SDK initialization (`@twa-dev/sdk`), viewport expansion, and haptic feedback integration
-  - Axios HTTP client with request/response interceptors injecting `Authorization: tma <initData>`
-  - Responsive Telegram design system (`index.css`) with glassmorphism and theme synchronization
-- [x] **Task 5: Frontend SRS Interface & State Management** *(Completed)*
-  - Interactive 3D flip card component (`FlashcardReview.tsx`) with Russian term, translation, and context
-  - SuperMemo SM-2 rating interaction buttons ("Again", "Hard", "Good", "Easy") with projected interval calculations
-  - Session completion screen (`ReviewComplete.tsx`) with celebration animations and haptic feedback
-  - Full vocabulary dictionary browser (`AllCardsView.tsx`) with live search and tag filtering
-  - State management integrating live deck statistics, session queues, and optimistic updates
-- [x] **Task 6: DevOps & Deployment Prep** *(Completed)*
-  - Production multi-stage `Dockerfile` for backend with layer caching and non-root execution
-  - Production multi-stage `Dockerfile` for frontend with Nginx 1.27 Alpine, Gzip, and SPA fallback
-  - Orchestrated `docker-compose.yml` with MongoDB 7.0 health checks, network isolation, and volume persistence
-  - 12-Factor and CI/CD compliance documentation
-
----
-
-## 🐳 DevOps & Deployment Architecture
-
-The system is containerized according to enterprise-grade Cloud-Native computing principles:
-
-```
-                          ┌────────────────────────┐
-                          │   Client / Telegram    │
-                          └───────────┬────────────┘
-                                      │ HTTP :8080
-                                      ▼
-                        ┌───────────────────────────┐
-                        │    ruscholar-frontend     │
-                        │    (Nginx 1.27 Alpine)    │
-                        │   - Gzip compression      │
-                        │   - Telegram CSP headers  │
-                        │   - SPA client fallback   │
-                        └─────────────┬─────────────┘
-                                      │ Proxy /api -> :5000
-                                      ▼
-                        ┌───────────────────────────┐
-                        │     ruscholar-backend     │
-                        │     (Node 22 Alpine)      │
-                        │   - Non-root user (node)  │
-                        │   - TypeScript compiled   │
-                        │   - Healthcheck: /api/heal│
-                        └─────────────┬─────────────┘
-                                      │ Mongoose URI
-                                      ▼
-                        ┌───────────────────────────┐
-                        │      ruscholar-mongo      │
-                        │       (MongoDB 7.0)       │
-                        │   - Persistent named vol  │
-                        │   - Native mongosh ping   │
-                        └───────────────────────────┘
-```
-
-### 1. Multi-Stage Build Optimizations
-* **Backend (`backend/Dockerfile`)**:
-  - `builder` stage: Installs build dependencies, compiles TypeScript to pure JavaScript in `dist/`.
-  - `runner` stage: Ships solely production dependencies (`npm ci --omit=dev`), the compiled `dist/`, and runs as the non-privileged `node` user to mitigate container breakout vulnerabilities.
-* **Frontend (`frontend/Dockerfile`)**:
-  - `builder` stage: Bundles Vite React assets into fingerprinted static chunks.
-  - `runner` stage: Copies assets to an ultra-lightweight Nginx Alpine base image (~25MB), configuring Gzip compression and long-term cache headers (`Cache-Control: public, immutable`).
-
-### 2. Local Stack Orchestration (`docker-compose.yml`)
-To spin up the entire application ecosystem locally:
-```bash
-# Set your environment variables in backend/.env or export them
+# 3. Launch the container stack
 docker compose up -d --build
 ```
-* **Dependency Health Checks**: The `backend` service waits for `mongo` to pass its native `mongosh` healthcheck before initializing Mongoose connections.
-* **Network Isolation**: All three containers communicate over the private bridge network `ruscholar-net`.
+* **Frontend TMA**: `http://localhost:8080`
+* **Backend API**: `http://localhost:5000/api`
+* **MongoDB**: `localhost:27017`
 
-### 3. CI/CD & Production Deployment Standards
-* **12-Factor Concurrency & Disposability**: The Node.js server handles `SIGTERM` and `SIGINT` signals with graceful connection draining and database disconnection timeouts.
-* **Stateless API Tier**: All session authentication is derived deterministically from Telegram's cryptographically signed `initData` or persisted in MongoDB, allowing horizontal scaling across container replicas (e.g. Kubernetes, AWS ECS, or DigitalOcean App Platform).
-* **Automated Quality Gates**: CI pipelines run `npm test` and `npm run typecheck` across both backend and frontend prior to container image creation.
+### Option 2: Local Development Setup
+
+#### Backend Setup:
+```bash
+cd backend
+npm install
+cp .env.example .env
+npm test            # Runs cryptographic & SM-2 test suites
+npm run dev         # Launches server on http://localhost:5000 with hot-reload
+```
+
+#### Frontend Setup:
+```bash
+cd frontend
+npm install
+npm run dev         # Launches Vite dev server on http://localhost:5173
+```
+
+---
+
+## 🧪 Automated Testing & Verification
+
+The backend includes cross-platform automated test suites covering:
+* **HMAC-SHA-256 Authentication**: Legitimate signature validation, tampered hash detection, spoofed payload protection, and 24-hour expiration replay defense.
+* **SuperMemo SM-2 Engine**: Mathematical verification of ease factor dynamics, interval scaling, and failure resets.
+* **Academic NLP Parser**: Academic term deconstruction and sentence context extraction.
+
+```bash
+cd backend
+npm test
+```
+
+---
+
+## 📄 License
+
+This project is open-sourced under the **MIT License**. See the [LICENSE](LICENSE) file for details.
+
+---
+
+## 📬 Contact & Author Information
+
+Developed with high engineering standards for academic evaluation in the **Master's in Software Engineering Program** (**Open Doors Russian Scholarship Project**):
+
+* **Author**: Saad Rimeh
+* **Email**: [Saad.rimeh.01@gmail.com](mailto:Saad.rimeh.01@gmail.com)
+* **GitHub**: [https://github.com/SaadRimeh/RuScholar-TMA](https://github.com/SaadRimeh/RuScholar-TMA)
+* **Expertise**: Full-Stack Architecture, Node.js/TypeScript, React Ecosystem, Distributed Systems, Telegram Mini Apps.
