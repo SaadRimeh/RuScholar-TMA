@@ -1,6 +1,6 @@
 import axios, { AxiosError } from 'axios';
 import type { InternalAxiosRequestConfig } from 'axios';
-import WebApp from '@twa-dev/sdk';
+import { getTelegramInitData } from '../utils/telegram';
 
 /**
  * Enterprise Axios HTTP client for RuScholar TMA.
@@ -18,19 +18,7 @@ export const apiClient = axios.create({
 // Request Interceptor: Attach Telegram WebApp initData
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    let initData = '';
-
-    try {
-      // 1. Attempt retrieval from @twa-dev/sdk
-      if (typeof WebApp !== 'undefined' && WebApp.initData) {
-        initData = WebApp.initData;
-      }
-    } catch {
-      // Fallback check on window.Telegram
-      if (typeof window !== 'undefined' && window.Telegram?.WebApp?.initData) {
-        initData = window.Telegram.WebApp.initData;
-      }
-    }
+    const initData = getTelegramInitData();
 
     // Attach authentication credentials if present
     if (initData) {

@@ -2,6 +2,8 @@ import React, { createContext, useContext, useEffect, useState, useMemo } from '
 import WebApp from '@twa-dev/sdk';
 import type { TelegramContextType, TelegramUser, TelegramThemeParams } from '../types/telegram.types';
 
+import { getTelegramInitData, getTelegramUser } from '../utils/telegram';
+
 const TelegramContext = createContext<TelegramContextType | undefined>(undefined);
 
 export const TelegramProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -13,37 +15,25 @@ export const TelegramProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   useEffect(() => {
     try {
-      if (typeof WebApp !== 'undefined' && WebApp.initDataUnsafe) {
-        // Signal to Telegram that the Mini App is fully initialized
+      if (typeof WebApp !== 'undefined') {
         WebApp.ready();
-
-        // Expand app viewport to full height
         WebApp.expand();
-
-        setIsAvailable(true);
-        setInitData(WebApp.initData || '');
-
-        if (WebApp.initDataUnsafe.user) {
-          setUser({
-            id: WebApp.initDataUnsafe.user.id,
-            first_name: WebApp.initDataUnsafe.user.first_name,
-            last_name: WebApp.initDataUnsafe.user.last_name,
-            username: WebApp.initDataUnsafe.user.username,
-            language_code: WebApp.initDataUnsafe.user.language_code,
-            is_premium: WebApp.initDataUnsafe.user.is_premium,
-          });
-        }
-
-        if (WebApp.colorScheme) {
-          setColorScheme(WebApp.colorScheme);
-        }
-
-        if (WebApp.themeParams) {
-          setThemeParams(WebApp.themeParams);
-        }
       }
-    } catch (err) {
-      console.warn('[TelegramProvider] Telegram WebApp SDK running outside Telegram client:', err);
+    } catch {
+      // Ignore
+    }
+
+    const detectedInitData = getTelegramInitData();
+    const detectedUser = getTelegramUser();
+
+    if (detectedInitData) {
+      setInitData(detectedInitData);
+      setIsAvailable(true);
+    }
+
+    if (detectedUser) {
+      setUser(detectedUser);
+    } else {
       // Fallback for desktop browser development
       setUser({
         id: 987654321,
@@ -52,6 +42,19 @@ export const TelegramProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         username: 'scholar_demo',
         language_code: 'en',
       });
+    }
+
+    try {
+      if (typeof WebApp !== 'undefined') {
+        if (WebApp.colorScheme) {
+          setColorScheme(WebApp.colorScheme);
+        }
+        if (WebApp.themeParams) {
+          setThemeParams(WebApp.themeParams);
+        }
+      }
+    } catch {
+      // Ignore
     }
   }, []);
 
