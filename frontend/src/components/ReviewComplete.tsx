@@ -22,67 +22,78 @@ export const ReviewComplete: React.FC<ReviewCompleteProps> = ({
     <div
       className="glass-panel"
       style={{
-        padding: '36px 24px',
+        padding: '40px 24px',
         textAlign: 'center',
-        maxWidth: '480px',
+        maxWidth: '500px',
         margin: '20px auto',
-        border: '1px solid rgba(46, 160, 67, 0.3)',
+        borderRadius: 'var(--radius-lg)',
+        border: '1px solid rgba(16, 185, 129, 0.35)',
+        background: 'linear-gradient(180deg, rgba(19, 26, 41, 0.95) 0%, rgba(13, 28, 20, 0.95) 100%)',
+        boxShadow: '0 20px 50px -10px rgba(0, 0, 0, 0.7), 0 0 30px rgba(16, 185, 129, 0.15)',
       }}
     >
-      <div style={{ fontSize: '3rem', marginBottom: '16px' }}>🏆</div>
-      <h2
+      <div
         style={{
-          fontSize: '1.5rem',
-          fontWeight: 800,
-          color: 'var(--text-primary)',
-          marginBottom: '8px',
+          width: '72px',
+          height: '72px',
+          borderRadius: '50%',
+          background: 'rgba(16, 185, 129, 0.12)',
+          border: '1px solid rgba(16, 185, 129, 0.3)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: '2.4rem',
+          margin: '0 auto 20px',
+          boxShadow: '0 0 20px rgba(16, 185, 129, 0.25)',
         }}
       >
-        Session Completed!
+        🏆
+      </div>
+
+      <h2
+        style={{
+          fontSize: '1.6rem',
+          fontWeight: 800,
+          fontFamily: 'var(--font-heading)',
+          color: '#ffffff',
+          marginBottom: '8px',
+          letterSpacing: '-0.02em',
+        }}
+      >
+        SRS Review Completed!
       </h2>
+
       <p
         style={{
           fontSize: '0.9rem',
           color: 'var(--text-secondary)',
           lineHeight: 1.6,
-          marginBottom: '24px',
+          marginBottom: '28px',
+          maxWidth: '380px',
+          margin: '0 auto 28px',
         }}
       >
-        Outstanding academic work! You reviewed <b>{reviewedCount} flashcard(s)</b>.
-        Your retention intervals have been recalibrated using the SuperMemo SM-2 algorithm.
+        Outstanding academic work! You mastered <b>{reviewedCount} term(s)</b>.
+        Your retention intervals have been recalibrated using the scientific <b>SuperMemo SM-2</b> algorithm.
       </p>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
         <button
           type="button"
+          className="btn-primary"
           onClick={onReturnToDashboard}
-          style={{
-            padding: '14px',
-            background: 'var(--accent-gradient)',
-            color: '#fff',
-            borderRadius: 'var(--radius-md)',
-            fontWeight: 700,
-            fontSize: '0.95rem',
-            boxShadow: '0 4px 16px rgba(47, 129, 247, 0.35)',
-          }}
+          style={{ width: '100%' }}
         >
-          📊 Return to Dashboard
+          <span>📊 Return to Dashboard</span>
         </button>
 
         <button
           type="button"
+          className="btn-secondary"
           onClick={onBrowseAll}
-          style={{
-            padding: '12px',
-            background: 'rgba(240, 246, 252, 0.08)',
-            color: 'var(--text-primary)',
-            borderRadius: 'var(--radius-md)',
-            fontWeight: 600,
-            fontSize: '0.9rem',
-            border: '1px solid var(--border-subtle)',
-          }}
+          style={{ width: '100%', padding: '13px' }}
         >
-          📚 Browse Vocabulary Dictionary
+          <span>📚 Browse Academic Dictionary</span>
         </button>
       </div>
     </div>
