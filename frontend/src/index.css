@@ -130,3 +130,108 @@ button:active {
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(240, 246, 252, 0.25);
 }
+
+/* 3D Flashcard Flip Mechanics */
+.flip-card-container {
+  perspective: 1200px;
+  width: 100%;
+  min-height: 340px;
+  cursor: pointer;
+}
+
+.flip-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 340px;
+  transition: transform 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform-style: preserve-3d;
+}
+
+.flip-card-inner.flipped {
+  transform: rotateY(180deg);
+}
+
+.flip-card-front,
+.flip-card-back {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 340px;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.flip-card-back {
+  transform: rotateY(180deg);
+}
+
+/* Rating Action Buttons */
+.rating-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 6px;
+  border-radius: var(--radius-md);
+  font-weight: 700;
+  font-size: 0.875rem;
+  gap: 4px;
+  border: 1px solid transparent;
+  transition: all var(--transition-fast);
+}
+
+.rating-btn:hover {
+  transform: translateY(-2px);
+}
+
+.rating-btn .interval-hint {
+  font-size: 0.7rem;
+  font-weight: 500;
+  opacity: 0.8;
+}
+
+.rating-again {
+  background: rgba(248, 81, 73, 0.15);
+  color: #ff7b72;
+  border-color: rgba(248, 81, 73, 0.3);
+}
+.rating-again:hover {
+  background: rgba(248, 81, 73, 0.25);
+}
+
+.rating-hard {
+  background: rgba(210, 153, 34, 0.15);
+  color: #e3b341;
+  border-color: rgba(210, 153, 34, 0.3);
+}
+.rating-hard:hover {
+  background: rgba(210, 153, 34, 0.25);
+}
+
+.rating-good {
+  background: rgba(47, 129, 247, 0.15);
+  color: #58a6ff;
+  border-color: rgba(47, 129, 247, 0.3);
+}
+.rating-good:hover {
+  background: rgba(47, 129, 247, 0.25);
+}
+
+.rating-easy {
+  background: rgba(46, 160, 67, 0.15);
+  color: #3fb950;
+  border-color: rgba(46, 160, 67, 0.3);
+}
+.rating-easy:hover {
+  background: rgba(46, 160, 67, 0.25);
+}
+
