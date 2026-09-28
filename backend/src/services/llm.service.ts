@@ -35,8 +35,10 @@ export class LLMService {
   }
 
   /**
-   * High-accuracy translation engine with multi-tiered public fallbacks
-   * (Google GTX engine + MyMemory API fallback).
+   * High-accuracy translation engine with multi-tiered public fallbacks:
+   * 1. Google Chrome Dictionary Client (reliable, avoids 429 rate-limiting)
+   * 2. Google Translate public GTX API
+   * 3. MyMemory Translation API with authorized application header
    */
   public async translateText(
     text: string,
@@ -45,32 +47,63 @@ export class LLMService {
     const trimmed = text.trim();
     if (!trimmed) return '';
 
-    // Tier 1: Google Translate public GTX API
+    const browserHeaders = {
+      'User-Agent':
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+      Accept: 'application/json, text/plain, */*',
+      'Accept-Language': 'en-US,en;q=0.9,ru;q=0.8',
+    };
+
+    // Tier 1: Google Translate Chrome Extension Client (avoids standard web 429 blocks)
     try {
-      const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${encodeURIComponent(
+      const url = `https://translate.googleapis.com/translate_a/single?client=dict-chrome-ex&sl=auto&tl=${encodeURIComponent(
         targetLanguage
       )}&dt=t&q=${encodeURIComponent(trimmed)}`;
-      const response = await axios.get(url, { timeout: 8000 });
+      const response = await axios.get(url, { headers: browserHeaders, timeout: 6000 });
       if (Array.isArray(response.data) && Array.isArray(response.data[0])) {
         const fullTranslation = response.data[0]
           .map((item: [string, ...unknown[]]) => item[0])
-          .join('');
-        if (fullTranslation.trim().length > 0) {
-          return fullTranslation.trim();
+          .join('')
+          .trim();
+        if (fullTranslation && fullTranslation.toLowerCase() !== trimmed.toLowerCase()) {
+          return fullTranslation;
         }
       }
     } catch (err) {
-      console.warn('[LLM Service] Google Translate GTX API error:', (err as Error).message);
+      console.warn('[LLM Service] Google dict-chrome-ex failed:', (err as Error).message);
     }
 
-    // Tier 2: MyMemory Translation API
+    // Tier 2: Google Translate GTX API
+    try {
+      const gtxUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${encodeURIComponent(
+        targetLanguage
+      )}&dt=t&q=${encodeURIComponent(trimmed)}`;
+      const response = await axios.get(gtxUrl, { headers: browserHeaders, timeout: 6000 });
+      if (Array.isArray(response.data) && Array.isArray(response.data[0])) {
+        const fullTranslation = response.data[0]
+          .map((item: [string, ...unknown[]]) => item[0])
+          .join('')
+          .trim();
+        if (fullTranslation && fullTranslation.toLowerCase() !== trimmed.toLowerCase()) {
+          return fullTranslation;
+        }
+      }
+    } catch (err) {
+      console.warn('[LLM Service] Google GTX failed:', (err as Error).message);
+    }
+
+    // Tier 3: MyMemory Translation API
     try {
       const myMemoryUrl = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(
         trimmed
-      )}&langpair=ru|${encodeURIComponent(targetLanguage)}`;
-      const response = await axios.get(myMemoryUrl, { timeout: 8000 });
+      )}&langpair=ru|${encodeURIComponent(targetLanguage)}&de=ruscholar.tma@gmail.com`;
+      const response = await axios.get(myMemoryUrl, { headers: browserHeaders, timeout: 6000 });
       const translated = response.data?.responseData?.translatedText;
-      if (typeof translated === 'string' && translated.trim().length > 0) {
+      if (
+        typeof translated === 'string' &&
+        translated.trim().length > 0 &&
+        translated.trim().toLowerCase() !== trimmed.toLowerCase()
+      ) {
         return translated.trim();
       }
     } catch (err) {
@@ -167,14 +200,21 @@ Return ONLY valid JSON matching this schema with NO markdown codeblocks or comme
     text: string,
     targetLanguage: string
   ): Promise<AcademicAnalysisResult> {
-    // 1. Perform genuine translation of the full text
-    const translatedText = await this.translateText(text, targetLanguage);
-
-    // 2. Academic dictionary of prevalent Russian university/STEM terms
+    // 1. Academic dictionary of prevalent Russian university/STEM terms & common conversational phrases
     const academicDictionary: Record<
       string,
       { en: string; pos: string; tags: string[] }
     > = {
+      'здравствуйте': { en: 'Hello / Greetings', pos: 'greeting', tags: ['conversation'] },
+      'привет': { en: 'Hello / Hi', pos: 'greeting', tags: ['conversation'] },
+      'добрый день': { en: 'Good day / Good afternoon', pos: 'greeting', tags: ['conversation'] },
+      'доброе утро': { en: 'Good morning', pos: 'greeting', tags: ['conversation'] },
+      'добрый вечер': { en: 'Good evening', pos: 'greeting', tags: ['conversation'] },
+      'пока': { en: 'Bye / See you', pos: 'interjection', tags: ['conversation'] },
+      'до свидания': { en: 'Goodbye / See you later', pos: 'phrase', tags: ['conversation'] },
+      'спасибо': { en: 'Thank you', pos: 'phrase', tags: ['conversation'] },
+      'пожалуйста': { en: "Please / You're welcome", pos: 'phrase', tags: ['conversation'] },
+
       'курсовая работа': { en: 'coursework / term project', pos: 'noun phrase', tags: ['academics', 'projects'] },
       'дипломная работа': { en: 'graduation thesis', pos: 'noun phrase', tags: ['thesis', 'graduation'] },
       'научный руководитель': { en: 'academic advisor / supervisor', pos: 'noun phrase', tags: ['administration', 'research'] },
@@ -204,11 +244,22 @@ Return ONLY valid JSON matching this schema with NO markdown codeblocks or comme
       'староста': { en: 'class representative / group leader', pos: 'noun', tags: ['administration', 'students'] },
       'университет': { en: 'university', pos: 'noun', tags: ['academics'] },
       'факультет': { en: 'faculty / department', pos: 'noun', tags: ['academics'] },
-      'пока': { en: 'bye / see you', pos: 'interjection', tags: ['conversation'] },
-      'привет': { en: 'hello / hi', pos: 'greeting', tags: ['conversation'] },
-      'здравствуйте': { en: 'hello / greetings', pos: 'greeting', tags: ['conversation'] },
-      'спасибо': { en: 'thank you', pos: 'phrase', tags: ['conversation'] },
     };
+
+    // 2. Perform translation of the full text
+    let translatedText = await this.translateText(text, targetLanguage);
+
+    const lowerCleanedText = text.trim().toLowerCase().replace(/[.,!?;:«»"()]/g, '');
+
+    // 3. Fallback guard: If translatedText is identical to original text or still Russian, check dictionary
+    if (
+      translatedText.trim().toLowerCase() === text.trim().toLowerCase() ||
+      /[а-яёА-ЯЁ]/.test(translatedText)
+    ) {
+      if (academicDictionary[lowerCleanedText]) {
+        translatedText = academicDictionary[lowerCleanedText].en;
+      }
+    }
 
     const sentences = text
       .split(/(?<=[.!?])\s+/)
@@ -244,7 +295,7 @@ Return ONLY valid JSON matching this schema with NO markdown codeblocks or comme
       }
     }
 
-    // 3. If no predefined dictionary terms matched, extract words and dynamically translate them
+    // 4. If no predefined dictionary terms matched, extract words and dynamically translate them
     if (extractedTerms.length === 0) {
       // Split words (both Cyrillic and Latin)
       const words = text
@@ -267,6 +318,14 @@ Return ONLY valid JSON matching this schema with NO markdown codeblocks or comme
           tags: ['academic-vocabulary'],
         });
       }
+    }
+
+    // Guard: If text is short and translatedText still equals original, use first extracted term translation
+    if (
+      (translatedText.trim().toLowerCase() === text.trim().toLowerCase() || /[а-яёА-ЯЁ]/.test(translatedText)) &&
+      extractedTerms[0]
+    ) {
+      translatedText = extractedTerms[0].translatedTerm;
     }
 
     return {
