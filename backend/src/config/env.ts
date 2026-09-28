@@ -14,6 +14,7 @@ export interface AppConfig {
   clientOrigin: string;
   yandexApiKey: string;
   yandexFolderId: string;
+  telegramMiniAppUrl: string;
 }
 
 const getEnv = (key: string, defaultValue?: string): string => {
@@ -34,4 +35,5 @@ export const config: AppConfig = {
   clientOrigin: process.env.CLIENT_ORIGIN || '*',
   yandexApiKey: process.env.YANDEX_API_KEY || '',
   yandexFolderId: process.env.YANDEX_FOLDER_ID || '',
+  telegramMiniAppUrl: process.env.TELEGRAM_MINI_APP_URL || 'http://localhost:5173',
 };

@@ -122,7 +122,10 @@ npm run dev
   - Mongoose models (`User`, `Message`, `Flashcard` with SM-2 SRS metrics and compound indexes)
   - Telegram Webhook endpoint with secret token verification
   - Enterprise HMAC-SHA-256 validation middleware with timing-safe comparison
-- [ ] **Task 2: Bot Logic & LLM Integration**
+- [x] **Task 2: Bot Logic & LLM Integration** *(Completed)*
+  - Telegram Bot service layer (`telegram.service.ts`) with HTML formatting & Mini App WebApp button
+  - Academic translation & LLM terminology extraction service (`llm.service.ts`) with YandexGPT API & resilient fallback
+  - Orchestration pipeline (`bot.service.ts`) automating translation, terms extraction, message persistence, and default SM-2 flashcard creation in MongoDB
 - [ ] **Task 3: Backend API for the Mini App**
 - [ ] **Task 4: Frontend Boilerplate & Telegram SDK**
 - [ ] **Task 5: Frontend SRS Interface & State Management**

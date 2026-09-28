@@ -8,7 +8,7 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "typecheck": "tsc --noEmit",
-    "test": "ts-node tests/hmac.test.ts"
+    "test": "ts-node tests/runAll.ts"
   },
   "keywords": [],
   "author": "",
