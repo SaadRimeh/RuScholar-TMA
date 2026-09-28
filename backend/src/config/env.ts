@@ -35,5 +35,6 @@ export const config: AppConfig = {
   clientOrigin: process.env.CLIENT_ORIGIN || '*',
   yandexApiKey: process.env.YANDEX_API_KEY || '',
   yandexFolderId: process.env.YANDEX_FOLDER_ID || '',
-  telegramMiniAppUrl: process.env.TELEGRAM_MINI_APP_URL || 'https://ru-scholar-tma.vercel.app',
+  telegramMiniAppUrl: (process.env.TELEGRAM_MINI_APP_URL || 'https://ru-scholar-tma.vercel.app')
+    .replace('ruscholar-tma.vercel.app', 'ru-scholar-tma.vercel.app'),
 };
