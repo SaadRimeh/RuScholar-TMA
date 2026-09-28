@@ -126,7 +126,11 @@ npm run dev
   - Telegram Bot service layer (`telegram.service.ts`) with HTML formatting & Mini App WebApp button
   - Academic translation & LLM terminology extraction service (`llm.service.ts`) with YandexGPT API & resilient fallback
   - Orchestration pipeline (`bot.service.ts`) automating translation, terms extraction, message persistence, and default SM-2 flashcard creation in MongoDB
-- [ ] **Task 3: Backend API for the Mini App**
+- [x] **Task 3: Backend API for the Mini App** *(Completed)*
+  - SuperMemo SM-2 Spaced Repetition engine (`srs.service.ts`) with ease factor, repetition, and interval calculation
+  - Due flashcard query endpoint (`GET /api/flashcards/due`) utilizing compound index `{ userId: 1, nextReviewDate: 1 }`
+  - Flashcard review submission endpoint (`POST /api/flashcards/:id/review`) with IDOR protection
+  - Comprehensive deck statistics (`GET /api/flashcards/stats`) and paginated search (`GET /api/flashcards`)
 - [ ] **Task 4: Frontend Boilerplate & Telegram SDK**
 - [ ] **Task 5: Frontend SRS Interface & State Management**
 - [ ] **Task 6: DevOps & Deployment Prep**
