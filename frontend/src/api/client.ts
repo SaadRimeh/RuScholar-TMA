@@ -7,8 +7,12 @@ import WebApp from '@twa-dev/sdk';
  * Automatically injects the cryptographic Telegram Mini App `initData`
  * into both Authorization and custom headers for backend verification.
  */
+const defaultApiUrl = import.meta.env.DEV
+  ? '/api'
+  : 'https://ruscholar-tma.onrender.com/api';
+
 export const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || '/api',
+  baseURL: import.meta.env.VITE_API_URL || defaultApiUrl,
   timeout: 15000,
   headers: {
     'Content-Type': 'application/json',
