@@ -1,16 +1,30 @@
-# RuScholar TMA — Academic Translate & Learn
+<div align="center">
+  <img src="assets/logo.svg" alt="RuScholar TMA Logo" width="160" height="160" />
+  <h1>RuScholar TMA</h1>
+  <p><b>Academic Translate &amp; Learn for International Students in Russia</b></p>
+  <p><i>Enterprise-grade Telegram Bot &amp; Integrated Mini App (TMA)</i></p>
 
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.x%20%7C%206.x-blue?logo=typescript)](https://www.typescriptlang.org/)
-[![Node.js](https://img.shields.io/badge/Node.js-22.x-green?logo=node.js)](https://nodejs.org/)
-[![Express.js](https://img.shields.io/badge/Express.js-5.x-lightgrey?logo=express)](https://expressjs.com/)
-[![React](https://img.shields.io/badge/React-19.x-61dafb?logo=react)](https://react.dev/)
-[![MongoDB](https://img.shields.io/badge/MongoDB-7.0-47A248?logo=mongodb)](https://www.mongodb.com/)
-[![Telegram](https://img.shields.io/badge/Telegram-Mini%20App%20SDK-26A5E4?logo=telegram)](https://core.telegram.org/bots/webapps)
-[![Docker](https://img.shields.io/badge/Docker-Multi--Stage-2496ED?logo=docker)](https://www.docker.com/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+  <p>
+    <a href="#-the-real-world-academic-problem-solved">Problem Solved</a> •
+    <a href="#-system-architecture">Architecture</a> •
+    <a href="#-end-to-end-sequence-workflows">Workflows</a> •
+    <a href="#-cryptographic-security--telegram-verification">Security</a> •
+    <a href="#-quick-start--installation">Quick Start</a> •
+    <a href="#-contact--author-information">Contact</a>
+  </p>
 
-> **Enterprise-Grade Telegram Bot & Integrated Mini App (TMA) for International University Students in the Russian Federation.**  
-> Designed and architected for the Master's in Software Engineering Portfolio (**Open Doors Russian Scholarship Project**).
+  [![TypeScript](https://img.shields.io/badge/TypeScript-5.x%20%7C%206.x-blue?logo=typescript)](https://www.typescriptlang.org/)
+  [![Node.js](https://img.shields.io/badge/Node.js-22.x-green?logo=node.js)](https://nodejs.org/)
+  [![Express.js](https://img.shields.io/badge/Express.js-5.x-lightgrey?logo=express)](https://expressjs.com/)
+  [![React](https://img.shields.io/badge/React-19.x-61dafb?logo=react)](https://react.dev/)
+  [![MongoDB](https://img.shields.io/badge/MongoDB-7.0-47A248?logo=mongodb)](https://www.mongodb.com/)
+  [![Telegram](https://img.shields.io/badge/Telegram-Mini%20App%20SDK-26A5E4?logo=telegram)](https://core.telegram.org/bots/webapps)
+  [![Docker](https://img.shields.io/badge/Docker-Multi--Stage-2496ED?logo=docker)](https://www.docker.com/)
+  [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+</div>
+
+> **Master's in Software Engineering Portfolio Project** (**Open Doors Russian Scholarship Project**).  
+> Designed to empower international university students across the Russian Federation to overcome academic language barriers with AI translation and Spaced Repetition (SM-2).
 
 ---
 

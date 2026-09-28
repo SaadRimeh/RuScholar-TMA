@@ -1,12 +1,15 @@
-# RuScholar TMA — Frontend Mini App
+<div align="center">
+  <img src="public/logo.svg" alt="RuScholar Frontend Logo" width="120" height="120" />
+  <h1>RuScholar TMA — Frontend Mini App</h1>
+  <p><b>Mobile-First React 19 &amp; Vite Telegram Mini App</b></p>
 
-[![React](https://img.shields.io/badge/React-19.x-61dafb?logo=react)](https://react.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-Strict-blue?logo=typescript)](https://www.typescriptlang.org/)
-[![Vite](https://img.shields.io/badge/Vite-8.x-646CFF?logo=vite)](https://vite.dev/)
-[![Telegram Web App](https://img.shields.io/badge/Telegram-@twa--dev/sdk-26A5E4?logo=telegram)](https://core.telegram.org/bots/webapps)
-[![Nginx](https://img.shields.io/badge/Nginx-Alpine%201.27-009639?logo=nginx)](https://nginx.org/)
+  [![React](https://img.shields.io/badge/React-19.x-61dafb?logo=react)](https://react.dev/)
+  [![TypeScript](https://img.shields.io/badge/TypeScript-Strict-blue?logo=typescript)](https://www.typescriptlang.org/)
+  [![Vite](https://img.shields.io/badge/Vite-8.x-646CFF?logo=vite)](https://vite.dev/)
+  [![Telegram Web App](https://img.shields.io/badge/Telegram-@twa--dev/sdk-26A5E4?logo=telegram)](https://core.telegram.org/bots/webapps)
+  [![Nginx](https://img.shields.io/badge/Nginx-Alpine%201.27-009639?logo=nginx)](https://nginx.org/)
+</div>
 
-> **Mobile-First React Telegram Mini App for RuScholar.**  
 > Delivers an interactive 3D Spaced Repetition (SM-2) flashcard learning interface, authenticated securely via Telegram's cryptographic `initData` protocol.
 
 ---

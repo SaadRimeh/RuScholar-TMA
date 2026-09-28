@@ -1,11 +1,14 @@
-# RuScholar TMA — Backend Service
+<div align="center">
+  <img src="../assets/logo.svg" alt="RuScholar Backend Logo" width="120" height="120" />
+  <h1>RuScholar TMA — Backend Service</h1>
+  <p><b>High-Performance Node.js &amp; TypeScript API Tier</b></p>
 
-[![TypeScript](https://img.shields.io/badge/TypeScript-Strict-blue?logo=typescript)](https://www.typescriptlang.org/)
-[![Express.js](https://img.shields.io/badge/Express.js-5.x-lightgrey?logo=express)](https://expressjs.com/)
-[![MongoDB](https://img.shields.io/badge/MongoDB-Mongoose-47A248?logo=mongodb)](https://mongoosejs.com/)
-[![Docker](https://img.shields.io/badge/Docker-Node%2022%20Alpine-2496ED?logo=docker)](https://www.docker.com/)
+  [![TypeScript](https://img.shields.io/badge/TypeScript-Strict-blue?logo=typescript)](https://www.typescriptlang.org/)
+  [![Express.js](https://img.shields.io/badge/Express.js-5.x-lightgrey?logo=express)](https://expressjs.com/)
+  [![MongoDB](https://img.shields.io/badge/MongoDB-Mongoose-47A248?logo=mongodb)](https://mongoosejs.com/)
+  [![Docker](https://img.shields.io/badge/Docker-Node%2022%20Alpine-2496ED?logo=docker)](https://www.docker.com/)
+</div>
 
-> **High-Performance Node.js & TypeScript Backend for RuScholar TMA.**  
 > Responsible for Telegram Bot Webhook ingestion, YandexGPT academic term extraction, SuperMemo SM-2 spaced repetition scheduling, and HMAC-SHA-256 authenticated REST APIs for the Telegram Mini App.
 
 ---

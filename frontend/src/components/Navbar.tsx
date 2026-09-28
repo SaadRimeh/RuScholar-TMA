@@ -27,23 +27,16 @@ export const Navbar: React.FC<NavbarProps> = ({ dueCount = 0 }) => {
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-        <div
+        <img
+          src="/logo.svg"
+          alt="RuScholar Logo"
           style={{
             width: '38px',
             height: '38px',
             borderRadius: 'var(--radius-sm)',
-            background: 'var(--accent-gradient)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontWeight: 800,
-            fontSize: '1.1rem',
-            color: '#fff',
-            boxShadow: '0 4px 12px rgba(47, 129, 247, 0.35)',
+            boxShadow: '0 4px 14px rgba(47, 129, 247, 0.4)',
           }}
-        >
-          RU
-        </div>
+        />
         <div>
           <h1
             style={{
