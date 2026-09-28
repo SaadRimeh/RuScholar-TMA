@@ -20,6 +20,7 @@ export const FlashcardReview: React.FC<FlashcardReviewProps> = ({
   const { triggerHaptic } = useTelegram();
   const [isFlipped, setIsFlipped] = useState<boolean>(false);
   const [submitting, setSubmitting] = useState<boolean>(false);
+  const [isSpeaking, setIsSpeaking] = useState<boolean>(false);
 
   // Compute live estimated interval hints for the buttons
   const getProjectedInterval = (rating: SRSRating): string => {
@@ -45,10 +46,15 @@ export const FlashcardReview: React.FC<FlashcardReviewProps> = ({
     setIsFlipped((prev) => !prev);
   };
 
-  const handleSpeak = (e: React.MouseEvent) => {
+  const handleSpeak = async (e: React.MouseEvent) => {
     e.stopPropagation();
     triggerHaptic('light');
-    speakRussian(card.originalTerm);
+    setIsSpeaking(true);
+    try {
+      await speakRussian(card.originalTerm);
+    } finally {
+      setIsSpeaking(false);
+    }
   };
 
   const handleRatingSubmit = async (rating: SRSRating) => {
@@ -156,8 +162,14 @@ export const FlashcardReview: React.FC<FlashcardReviewProps> = ({
                     className="audio-btn"
                     onClick={handleSpeak}
                     title="Listen to Russian pronunciation"
+                    style={{
+                      background: isSpeaking ? 'rgba(56, 189, 248, 0.4)' : undefined,
+                      transform: isSpeaking ? 'scale(1.15)' : undefined,
+                      boxShadow: isSpeaking ? '0 0 16px rgba(56, 189, 248, 0.7)' : undefined,
+                      border: isSpeaking ? '1px solid var(--accent-cyan)' : undefined,
+                    }}
                   >
-                    🔊
+                    {isSpeaking ? '🔊' : '🔉'}
                   </button>
                   {card.tags?.slice(0, 1).map((tag, idx) => (
                     <span

@@ -12,6 +12,7 @@ export const AllCardsView: React.FC = () => {
   const [search, setSearch] = useState<string>('');
   const [selectedTag, setSelectedTag] = useState<string>('');
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [speakingTerm, setSpeakingTerm] = useState<string | null>(null);
 
   const fetchCards = useCallback(async () => {
     setLoading(true);
@@ -51,10 +52,15 @@ export const AllCardsView: React.FC = () => {
     }
   };
 
-  const handleSpeak = (e: React.MouseEvent, term: string) => {
+  const handleSpeak = async (e: React.MouseEvent, term: string) => {
     e.stopPropagation();
     triggerHaptic('light');
-    speakRussian(term);
+    setSpeakingTerm(term);
+    try {
+      await speakRussian(term);
+    } finally {
+      setSpeakingTerm(null);
+    }
   };
 
   // Collect unique tags
@@ -229,11 +235,18 @@ export const AllCardsView: React.FC = () => {
                     <button
                       type="button"
                       className="audio-btn"
-                      style={{ width: '28px', height: '28px', fontSize: '0.8rem' }}
+                      style={{
+                        width: '28px',
+                        height: '28px',
+                        fontSize: '0.8rem',
+                        background: speakingTerm === card.originalTerm ? 'rgba(56, 189, 248, 0.4)' : undefined,
+                        transform: speakingTerm === card.originalTerm ? 'scale(1.2)' : undefined,
+                        boxShadow: speakingTerm === card.originalTerm ? '0 0 12px rgba(56, 189, 248, 0.7)' : undefined,
+                      }}
                       onClick={(e) => handleSpeak(e, card.originalTerm)}
-                      title="Pronounce term"
+                      title="Pronounce term in Russian"
                     >
-                      🔊
+                      {speakingTerm === card.originalTerm ? '🔊' : '🔉'}
                     </button>
 
                     {card.partOfSpeech && (
