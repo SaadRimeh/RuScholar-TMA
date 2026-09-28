@@ -131,6 +131,10 @@ npm run dev
   - Due flashcard query endpoint (`GET /api/flashcards/due`) utilizing compound index `{ userId: 1, nextReviewDate: 1 }`
   - Flashcard review submission endpoint (`POST /api/flashcards/:id/review`) with IDOR protection
   - Comprehensive deck statistics (`GET /api/flashcards/stats`) and paginated search (`GET /api/flashcards`)
-- [ ] **Task 4: Frontend Boilerplate & Telegram SDK**
+- [x] **Task 4: Frontend Boilerplate & Telegram SDK** *(Completed)*
+  - Vite React + TypeScript boilerplate with strict module typing
+  - Telegram WebApp SDK initialization (`@twa-dev/sdk`), viewport expansion, and haptic feedback integration
+  - Axios HTTP client with request/response interceptors injecting `Authorization: tma <initData>`
+  - Responsive Telegram design system (`index.css`) with glassmorphism and theme synchronization
 - [ ] **Task 5: Frontend SRS Interface & State Management**
 - [ ] **Task 6: DevOps & Deployment Prep**
