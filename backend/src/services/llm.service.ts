@@ -30,8 +30,54 @@ export class LLMService {
       }
     }
 
-    // Robust heuristic / dictionary fallback for development, testing, and offline resilience
-    return this.fallbackAcademicExtractor(trimmedText, targetLanguage);
+    // Robust heuristic / dictionary / online translation fallback
+    return await this.fallbackAcademicExtractor(trimmedText, targetLanguage);
+  }
+
+  /**
+   * High-accuracy translation engine with multi-tiered public fallbacks
+   * (Google GTX engine + MyMemory API fallback).
+   */
+  public async translateText(
+    text: string,
+    targetLanguage: string = 'en'
+  ): Promise<string> {
+    const trimmed = text.trim();
+    if (!trimmed) return '';
+
+    // Tier 1: Google Translate public GTX API
+    try {
+      const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${encodeURIComponent(
+        targetLanguage
+      )}&dt=t&q=${encodeURIComponent(trimmed)}`;
+      const response = await axios.get(url, { timeout: 8000 });
+      if (Array.isArray(response.data) && Array.isArray(response.data[0])) {
+        const fullTranslation = response.data[0]
+          .map((item: [string, ...unknown[]]) => item[0])
+          .join('');
+        if (fullTranslation.trim().length > 0) {
+          return fullTranslation.trim();
+        }
+      }
+    } catch (err) {
+      console.warn('[LLM Service] Google Translate GTX API error:', (err as Error).message);
+    }
+
+    // Tier 2: MyMemory Translation API
+    try {
+      const myMemoryUrl = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(
+        trimmed
+      )}&langpair=ru|${encodeURIComponent(targetLanguage)}`;
+      const response = await axios.get(myMemoryUrl, { timeout: 8000 });
+      const translated = response.data?.responseData?.translatedText;
+      if (typeof translated === 'string' && translated.trim().length > 0) {
+        return translated.trim();
+      }
+    } catch (err) {
+      console.warn('[LLM Service] MyMemory API error:', (err as Error).message);
+    }
+
+    return trimmed;
   }
 
   /**
@@ -114,14 +160,17 @@ Return ONLY valid JSON matching this schema with NO markdown codeblocks or comme
   }
 
   /**
-   * Resilient fallback academic parser. Deconstructs sentences, maps academic keywords,
-   * and creates initial flashcards even when external LLM credentials are intentionally unconfigured.
+   * Resilient fallback academic parser. Translates text dynamically, maps academic keywords,
+   * and creates flashcards with genuine translations even without external LLM credentials.
    */
-  private fallbackAcademicExtractor(
+  private async fallbackAcademicExtractor(
     text: string,
     targetLanguage: string
-  ): AcademicAnalysisResult {
-    // Academic dictionary of prevalent Russian university/STEM terms
+  ): Promise<AcademicAnalysisResult> {
+    // 1. Perform genuine translation of the full text
+    const translatedText = await this.translateText(text, targetLanguage);
+
+    // 2. Academic dictionary of prevalent Russian university/STEM terms
     const academicDictionary: Record<
       string,
       { en: string; pos: string; tags: string[] }
@@ -130,6 +179,10 @@ Return ONLY valid JSON matching this schema with NO markdown codeblocks or comme
       'дипломная работа': { en: 'graduation thesis', pos: 'noun phrase', tags: ['thesis', 'graduation'] },
       'научный руководитель': { en: 'academic advisor / supervisor', pos: 'noun phrase', tags: ['administration', 'research'] },
       'лабораторная работа': { en: 'laboratory assignment', pos: 'noun phrase', tags: ['lab', 'practical'] },
+      'отчет по лабораторной работе': { en: 'laboratory report', pos: 'noun phrase', tags: ['lab', 'report'] },
+      'отчет': { en: 'report / summary', pos: 'noun', tags: ['study', 'assignment'] },
+      'защита': { en: 'defense (thesis / project)', pos: 'noun', tags: ['thesis', 'exams'] },
+      'аудитория': { en: 'lecture hall / classroom / room', pos: 'noun', tags: ['university', 'campus'] },
       'зачёт': { en: 'pass/fail assessment (credit)', pos: 'noun', tags: ['exams', 'grading'] },
       'экзамен': { en: 'examination', pos: 'noun', tags: ['exams', 'grading'] },
       'сессия': { en: 'examination session / finals period', pos: 'noun', tags: ['calendar', 'exams'] },
@@ -146,6 +199,15 @@ Return ONLY valid JSON matching this schema with NO markdown codeblocks or comme
       'доклад': { en: 'presentation / report', pos: 'noun', tags: ['academics', 'speech'] },
       'исследование': { en: 'research / study', pos: 'noun', tags: ['research', 'science'] },
       'практическое занятие': { en: 'seminar / practical class', pos: 'noun phrase', tags: ['study', 'classes'] },
+      'стипендия': { en: 'scholarship / academic stipend', pos: 'noun', tags: ['finance', 'university'] },
+      'пересдача': { en: 'retake / re-examination', pos: 'noun', tags: ['exams', 'grading'] },
+      'староста': { en: 'class representative / group leader', pos: 'noun', tags: ['administration', 'students'] },
+      'университет': { en: 'university', pos: 'noun', tags: ['academics'] },
+      'факультет': { en: 'faculty / department', pos: 'noun', tags: ['academics'] },
+      'пока': { en: 'bye / see you', pos: 'interjection', tags: ['conversation'] },
+      'привет': { en: 'hello / hi', pos: 'greeting', tags: ['conversation'] },
+      'здравствуйте': { en: 'hello / greetings', pos: 'greeting', tags: ['conversation'] },
+      'спасибо': { en: 'thank you', pos: 'phrase', tags: ['conversation'] },
     };
 
     const sentences = text
@@ -156,9 +218,14 @@ Return ONLY valid JSON matching this schema with NO markdown codeblocks or comme
     const extractedTerms: ExtractedTerm[] = [];
     const lowerText = text.toLowerCase();
 
-    // Check predefined academic terms
-    for (const [term, meta] of Object.entries(academicDictionary)) {
+    // Check predefined academic terms (prioritize longer phrases first)
+    const sortedKeys = Object.keys(academicDictionary).sort((a, b) => b.length - a.length);
+
+    for (const term of sortedKeys) {
       if (lowerText.includes(term)) {
+        const meta = academicDictionary[term];
+        if (!meta) continue;
+
         const matchingSentence = sentences.find((s) =>
           s.toLowerCase().includes(term)
         );
@@ -171,24 +238,31 @@ Return ONLY valid JSON matching this schema with NO markdown codeblocks or comme
           partOfSpeech: meta.pos,
           tags: meta.tags,
         });
+
+        // Limit to 5 terms
+        if (extractedTerms.length >= 5) break;
       }
     }
 
-    // If no predefined terms matched, extract capitalized or prominent Russian noun candidates
+    // 3. If no predefined dictionary terms matched, extract words and dynamically translate them
     if (extractedTerms.length === 0) {
+      // Split words (both Cyrillic and Latin)
       const words = text
         .split(/[\s,.;:!?()«»"]+/)
         .map((w) => w.trim())
-        .filter((w) => w.length > 4 && /[а-яёА-ЯЁ]/.test(w));
+        .filter((w) => w.length >= 3);
 
       const uniqueWords = Array.from(new Set(words)).slice(0, 3);
       for (const word of uniqueWords) {
         const sentence = sentences.find((s) => s.includes(word)) || text;
+        const translatedWord = await this.translateText(word, targetLanguage);
+        const translatedSentence = await this.translateText(sentence, targetLanguage);
+
         extractedTerms.push({
           originalTerm: word.toLowerCase(),
-          translatedTerm: `[Academic term: ${word}]`,
+          translatedTerm: translatedWord || word,
           contextSentenceRu: sentence,
-          contextSentenceEn: `Academic context in Russian: "${sentence}"`,
+          contextSentenceEn: translatedSentence,
           partOfSpeech: 'term',
           tags: ['academic-vocabulary'],
         });
@@ -197,7 +271,7 @@ Return ONLY valid JSON matching this schema with NO markdown codeblocks or comme
 
     return {
       originalText: text,
-      translatedText: `[Translation to ${targetLanguage}]: ${text}`,
+      translatedText,
       sourceLanguage: 'ru',
       targetLanguage,
       terms: extractedTerms.slice(0, 5),
