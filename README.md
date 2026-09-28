@@ -257,7 +257,7 @@ This project is open-sourced under the **MIT License**. See the [LICENSE](LICENS
 
 ## 📬 Contact & Author Information
 
-Developed with high engineering standards for academic evaluation in the **Master's in Software Engineering Program** (**Open Doors Russian Scholarship Project**):
+
 
 * **Author**: Saad Rimeh
 * **Email**: [Saad.rimeh.01@gmail.com](mailto:Saad.rimeh.01@gmail.com)
