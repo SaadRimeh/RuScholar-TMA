@@ -142,4 +142,68 @@ npm run dev
   - Session completion screen (`ReviewComplete.tsx`) with celebration animations and haptic feedback
   - Full vocabulary dictionary browser (`AllCardsView.tsx`) with live search and tag filtering
   - State management integrating live deck statistics, session queues, and optimistic updates
-- [ ] **Task 6: DevOps & Deployment Prep**
+- [x] **Task 6: DevOps & Deployment Prep** *(Completed)*
+  - Production multi-stage `Dockerfile` for backend with layer caching and non-root execution
+  - Production multi-stage `Dockerfile` for frontend with Nginx 1.27 Alpine, Gzip, and SPA fallback
+  - Orchestrated `docker-compose.yml` with MongoDB 7.0 health checks, network isolation, and volume persistence
+  - 12-Factor and CI/CD compliance documentation
+
+---
+
+## 🐳 DevOps & Deployment Architecture
+
+The system is containerized according to enterprise-grade Cloud-Native computing principles:
+
+```
+                          ┌────────────────────────┐
+                          │   Client / Telegram    │
+                          └───────────┬────────────┘
+                                      │ HTTP :8080
+                                      ▼
+                        ┌───────────────────────────┐
+                        │    ruscholar-frontend     │
+                        │    (Nginx 1.27 Alpine)    │
+                        │   - Gzip compression      │
+                        │   - Telegram CSP headers  │
+                        │   - SPA client fallback   │
+                        └─────────────┬─────────────┘
+                                      │ Proxy /api -> :5000
+                                      ▼
+                        ┌───────────────────────────┐
+                        │     ruscholar-backend     │
+                        │     (Node 22 Alpine)      │
+                        │   - Non-root user (node)  │
+                        │   - TypeScript compiled   │
+                        │   - Healthcheck: /api/heal│
+                        └─────────────┬─────────────┘
+                                      │ Mongoose URI
+                                      ▼
+                        ┌───────────────────────────┐
+                        │      ruscholar-mongo      │
+                        │       (MongoDB 7.0)       │
+                        │   - Persistent named vol  │
+                        │   - Native mongosh ping   │
+                        └───────────────────────────┘
+```
+
+### 1. Multi-Stage Build Optimizations
+* **Backend (`backend/Dockerfile`)**:
+  - `builder` stage: Installs build dependencies, compiles TypeScript to pure JavaScript in `dist/`.
+  - `runner` stage: Ships solely production dependencies (`npm ci --omit=dev`), the compiled `dist/`, and runs as the non-privileged `node` user to mitigate container breakout vulnerabilities.
+* **Frontend (`frontend/Dockerfile`)**:
+  - `builder` stage: Bundles Vite React assets into fingerprinted static chunks.
+  - `runner` stage: Copies assets to an ultra-lightweight Nginx Alpine base image (~25MB), configuring Gzip compression and long-term cache headers (`Cache-Control: public, immutable`).
+
+### 2. Local Stack Orchestration (`docker-compose.yml`)
+To spin up the entire application ecosystem locally:
+```bash
+# Set your environment variables in backend/.env or export them
+docker compose up -d --build
+```
+* **Dependency Health Checks**: The `backend` service waits for `mongo` to pass its native `mongosh` healthcheck before initializing Mongoose connections.
+* **Network Isolation**: All three containers communicate over the private bridge network `ruscholar-net`.
+
+### 3. CI/CD & Production Deployment Standards
+* **12-Factor Concurrency & Disposability**: The Node.js server handles `SIGTERM` and `SIGINT` signals with graceful connection draining and database disconnection timeouts.
+* **Stateless API Tier**: All session authentication is derived deterministically from Telegram's cryptographically signed `initData` or persisted in MongoDB, allowing horizontal scaling across container replicas (e.g. Kubernetes, AWS ECS, or DigitalOcean App Platform).
+* **Automated Quality Gates**: CI pipelines run `npm test` and `npm run typecheck` across both backend and frontend prior to container image creation.
